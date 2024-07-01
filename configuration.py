@@ -7,7 +7,9 @@ class DefaultConfiguration:
         self.connectivity_check_url = ""
         self.proxy_status_table = []
         self.delay_connectivity_check = 4 # 4 seconds
-        self.delay_proxy_selection = 3 # 3 seconds
+        self.delay_proxy_selection = 4 # 3 seconds
+        self.iptables_target_port = -1
+        self.iptables_inbound_interface = "proxy" # interface name
 
 default_config = DefaultConfiguration()
 
