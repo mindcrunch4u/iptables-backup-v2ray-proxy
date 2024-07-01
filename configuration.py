@@ -6,25 +6,26 @@ class DefaultConfiguration:
         self.verbose = False
         self.connectivity_check_url = ""
         self.proxy_status_table = []
+        self.delay_connectivity_check = 4 # 4 seconds
+        self.delay_proxy_selection = 3 # 3 seconds
 
 default_config = DefaultConfiguration()
 
 default_config.verbose = True
 default_config.connectivity_check_url = "https://google.com"
 
-default_config.proxy_status_table = [
+# dokodemo port is the key
+default_config.proxy_status_table[12345] = 
         {
             "comment": "first proxy",
             "status": "down",
             "priority": 1,
             "connectivity_test": "http://127.0.0.1:10000",
-            "dokodemo_port": 12345
-        },
+        }
+default_config.proxy_status_table[23456] = 
         {
             "comment": "second proxy",
             "status": "down",
             "priority": 2,
             "connectivity_test": "http://127.0.0.1:20000",
-            "dokodemo_port": 23456
-        },
-        ]
+        }
