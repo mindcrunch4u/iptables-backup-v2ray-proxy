@@ -18,15 +18,17 @@ default_config.connectivity_check_url = "https://google.com"
 
 # dokodemo port is the key
 default_config.proxy_status_table = dict()
-default_config.proxy_status_table[12345] = 
+default_config.proxy_status_table["unique name 1"] = 
         {
+            "dokodemo_port": 12345
             "comment": "first proxy",
             "status": "down",
             "priority": 1,
             "connectivity_test": "http://127.0.0.1:10000",
         }
-default_config.proxy_status_table[23456] = 
+default_config.proxy_status_table["unique name 2"] = 
         {
+            "dokodemo_port": 23456
             "comment": "second proxy",
             "status": "down",
             "priority": 2,

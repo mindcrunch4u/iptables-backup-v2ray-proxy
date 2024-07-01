@@ -106,7 +106,7 @@ def thread_connectivity_check():
         current_query_list = []
         for proxy in conf.proxy_status_table:
             current_item = {
-                    "dokodemo_port": proxy,
+                    "dokodemo_port": conf.proxy_status_table[proxy]["dokodemo_port"],
                     "curl_proxy": conf.proxy_status_table[proxy]["connectivity_test"],
                     "curl_target": conf.connectivity_check_url
                     }
@@ -128,7 +128,7 @@ def thread_connectivity_check():
             debug("Table update complete.")
             for item in conf.proxy_status_table:
                 debug("\tport:{} c:{} s:{} pri:{} url:{}".format(
-                        item,
+                        conf.proxy_status_table[item]["dokodemo_port"],
                         conf.proxy_status_table[item]["comment"],
                         conf.proxy_status_table[item]["status"],
                         conf.proxy_status_table[item]["priority"],
@@ -156,7 +156,7 @@ def thread_proxy_selection():
         for item in sorted_list:
             current_info = item[1]
             if current_info["status"] == "up":
-                selection_port = item[0]
+                selection_port = current_info["dokodemo_port"]
                 break
             else:
                 continue
