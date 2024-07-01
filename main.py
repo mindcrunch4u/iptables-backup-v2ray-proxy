@@ -24,29 +24,29 @@ def info(content):
 def error(content):
     print("[{:19}] [-] {}".format(t(), content))
 
-def build_iptables_command(inbound_interface, to_dokodemo_port, option="add"):
+def build_iptables_command(inbound_interface, to_dokodemo_port, http_port=None, option="add"):
     iptables_commands = []
-
+    iptables_action_keyword = "-A"
     if option == "add":
-        iptables_command_tcp = "sudo iptables -t nat -A PREROUTING -i {} -p tcp -j REDIRECT --to-port {}".format(
-                inbound_interface, to_dokodemo_port)
-        iptables_command_udp = "sudo iptables -t nat -A PREROUTING -i {} -p udp -j REDIRECT --to-port {}".format(
-                inbound_interface, to_dokodemo_port)
-        iptables_commands.append(iptables_command_tcp)
-        iptables_commands.append(iptables_command_udp)
+        iptables_action_keyword = "-A"
     else:
-        # == "remove"
-        iptables_command_tcp = "sudo iptables -t nat -D PREROUTING -i {} -p tcp -j REDIRECT --to-port {}".format(
-                inbound_interface, to_dokodemo_port)
-        iptables_command_udp = "sudo iptables -t nat -D PREROUTING -i {} -p udp -j REDIRECT --to-port {}".format(
-                inbound_interface, to_dokodemo_port)
+        # == remove
+        iptables_action_keyword = "-D"
+
+    if conf.dokodemo_enabled:
+        iptables_command_tcp = "sudo iptables -t nat {} PREROUTING -i {} -p tcp -j REDIRECT --to-port {}".format(iptables_action_keyword, inbound_interface, to_dokodemo_port)
+        iptables_command_udp = "sudo iptables -t nat {} PREROUTING -i {} -p udp -j REDIRECT --to-port {}".format(iptables_action_keyword, inbound_interface, to_dokodemo_port)
         iptables_commands.append(iptables_command_tcp)
         iptables_commands.append(iptables_command_udp)
+
+    if conf.http_enabled and http_port:
+        iptables_command_http = "sudo iptables -t nat {} PREROUTING -p tcp --dport {} -j REDIRECT --to-port {}".format(iptables_action_keyword, conf.http_inbound_port, http_port)
+        iptables_commands.append(iptables_command_http)
 
     return iptables_commands
 
-def iptables_add_route(inbound_interface, to_dokodemo_port):
-    commands = build_iptables_command(inbound_interface, to_dokodemo_port, "add")
+def iptables_add_route(inbound_interface, to_dokodemo_port, to_http_port=None):
+    commands = build_iptables_command(inbound_interface, to_dokodemo_port, to_http_port, "add")
     for iptables_command in commands:
         process = Popen(iptables_command , stdout=PIPE, stderr=STDOUT, shell=True)
         exitcode = process.wait()
@@ -56,8 +56,8 @@ def iptables_add_route(inbound_interface, to_dokodemo_port):
     debug("Executed all iptables commands to add routes from interface {} to port{}".format(
                 inbound_interface, to_dokodemo_port))
 
-def iptables_remove_route(inbound_interface, to_dokodemo_port):
-    commands = build_iptables_command(inbound_interface, to_dokodemo_port, "remove")
+def iptables_remove_route(inbound_interface, to_dokodemo_port, to_http_port=None):
+    commands = build_iptables_command(inbound_interface, to_dokodemo_port, to_http_port, "remove")
     for iptables_command in commands:
         exitcode = 0
         while exitcode == 0:
@@ -153,33 +153,48 @@ def thread_proxy_selection():
             for item in sorted_list:
                 debug("\t{}".format(item))
         selection_port = -1
+        selected_unique_key = ""
         for item in sorted_list:
             current_info = item[1]
             if current_info["status"] == "up":
                 selection_port = current_info["dokodemo_port"]
+                selected_unique_key = item[0]
                 break
             else:
                 continue
         debug("Selection port:{}".format(selection_port))
-        if selection_port == -1:
+        if (selection_port == None) or selection_port == -1:
             error("No heathly proxy found")
         elif selection_port <= 0:
             error("Weird port number selected")
         else:
-            if conf.iptables_target_port == selection_port:
+            if conf.iptables_latest_selected_key == selected_unique_key:
                 # port didn't change
                 pass
             else:
-                info("Port switched from {} to {}".format(conf.iptables_target_port, selection_port))
+                iptables_last_target_port = -1
+                if conf.iptables_latest_selected_key not in conf.proxy_status_table:
+                    pass
+                else:
+                    iptables_last_target_port = conf.proxy_status_table[conf.iptables_latest_selected_key]["dokodemo_port"]
 
-                info("Remove iptables rules to {}".format(conf.iptables_target_port))
-                if conf.iptables_target_port > 0:
-                    iptables_remove_route(conf.iptables_inbound_interface, conf.iptables_target_port)
+
+                info("Port switched from {} to {}".format(iptables_last_target_port, selection_port))
+
+                if iptables_last_target_port > 0:
+                    info("Remove iptables rules to {}".format(iptables_last_target_port))
+                    to_http_port = None
+                    if "http_port" in conf.proxy_status_table[conf.iptables_latest_selected_key]:
+                        to_http_port = conf.proxy_status_table[conf.iptables_latest_selected_key]["http_port"]
+                    iptables_remove_route(conf.iptables_inbound_interface, iptables_last_target_port, to_http_port)
 
                 info("Add iptables rules to {}".format(selection_port))
-                iptables_add_route(conf.iptables_inbound_interface, selection_port)
+                to_http_port = None
+                if "http_port" in conf.proxy_status_table[selected_unique_key]:
+                    to_http_port = conf.proxy_status_table[selected_unique_key]["http_port"]
+                iptables_add_route(conf.iptables_inbound_interface, selection_port, to_http_port)
 
-                conf.iptables_target_port = selection_port
+                conf.iptables_latest_selected_key = selected_unique_key
 
         table_update_mutex.release()
         global_mutex.release()
