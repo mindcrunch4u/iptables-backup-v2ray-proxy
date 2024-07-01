@@ -58,8 +58,8 @@ def iptables_add_route(inbound_interface, to_dokodemo_port):
 
 def iptables_remove_route(inbound_interface, to_dokodemo_port):
     commands = build_iptables_command(inbound_interface, to_dokodemo_port, "remove")
-    exitcode = 0
     for iptables_command in commands:
+        exitcode = 0
         while exitcode == 0:
             process = Popen(iptables_command , stdout=PIPE, stderr=STDOUT, shell=True)
             exitcode = process.wait()
