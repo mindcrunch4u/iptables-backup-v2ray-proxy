@@ -31,7 +31,9 @@ default_config.proxy_status_table["unique name 1"] =
             "status": "down",
             "priority": 1,
             "connectivity_test": "http://127.0.0.1:10000",
-            "http_port": 10001,
+
+            "http_ip": "127.0.0.1", # proxy port 4001 to port 6000 tcp
+            "http_port": 6000,
         }
 default_config.proxy_status_table["unique name 2"] = 
         {
@@ -40,5 +42,7 @@ default_config.proxy_status_table["unique name 2"] =
             "status": "down",
             "priority": 2,
             "connectivity_test": "http://127.0.0.1:20000",
-            "http_port": 20001,
+
+            "http_ip": "127.0.0.1", # proxy port 4001 to port 7000 tcp
+            "http_port": 7000,
         }
