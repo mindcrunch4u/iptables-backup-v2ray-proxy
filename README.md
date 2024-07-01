@@ -8,4 +8,8 @@ In order to test connectivity of proxies, each v2ray configuration needs to expo
 
 This tool assumes the topology below:
 
+![setup for this script](https://github.com/mindcrunch4u/iptables-backup-v2ray-proxy/blob/main/about/topology.png)
 
+And it works like this:
+
+![how it updates proxy](https://github.com/mindcrunch4u/iptables-backup-v2ray-proxy/blob/main/about/how%20it%20works.png)
