@@ -40,7 +40,7 @@ def build_iptables_command(inbound_interface, to_dokodemo_port, http_ip=None, ht
         iptables_commands.append(iptables_command_udp)
 
     if conf.http_enabled and http_port:
-        iptables_command_http = "sudo iptables -t nat {} PREROUTING -p tcp --dport {} -j REDIRECT --to {}:{}".format(iptables_action_keyword, conf.http_inbound_port, http_ip, http_port)
+        iptables_command_http = "sudo iptables -t nat {} PREROUTING -p tcp --dport {} -j DNAT --to {}:{}".format(iptables_action_keyword, conf.http_inbound_port, http_ip, http_port)
         iptables_commands.append(iptables_command_http)
 
     return iptables_commands
@@ -53,6 +53,7 @@ def iptables_add_route(inbound_interface, to_dokodemo_port, to_http_ip=None, to_
         if exitcode != 0:
             error("Failed to add iptables routes from interface {} to port {}".format(
                 inbound_interface, to_dokodemo_port))
+            error("\t{}".format(iptables_command))
     debug("Executed all iptables commands to add routes from interface {} to port{}".format(
                 inbound_interface, to_dokodemo_port))
 
