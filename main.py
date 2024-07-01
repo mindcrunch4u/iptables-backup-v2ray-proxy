@@ -84,18 +84,18 @@ def is_proxy_valid(curl_proxy, proxy_target):
     exitcode = process.wait()
     return exitcode == 0
 
-def thread_table_update(dokodemo_port, curl_proxy, proxy_target):
+def thread_table_update(unique_key, curl_proxy, proxy_target):
     # perform curl check
     if conf.verbose:
-        debug("\tupdate thread: port:{} proxy:{} target:{}".format(
-            dokodemo_port, curl_proxy, proxy_target))
+        debug("\tupdate thread: key:{} proxy:{} target:{}".format(
+            unique_key, curl_proxy, proxy_target))
     result = is_proxy_valid(curl_proxy, proxy_target)
     
     table_update_mutex.acquire()
     if result:
-        conf.proxy_status_table[dokodemo_port]["status"] = "up"
+        conf.proxy_status_table[unique_key]["status"] = "up"
     else:
-        conf.proxy_status_table[dokodemo_port]["status"] = "down"
+        conf.proxy_status_table[unique_key]["status"] = "down"
     table_update_mutex.release()
 
 def thread_connectivity_check():
@@ -106,6 +106,7 @@ def thread_connectivity_check():
         current_query_list = []
         for proxy in conf.proxy_status_table:
             current_item = {
+                    "unique_key": proxy,
                     "dokodemo_port": conf.proxy_status_table[proxy]["dokodemo_port"],
                     "curl_proxy": conf.proxy_status_table[proxy]["connectivity_test"],
                     "curl_target": conf.connectivity_check_url
@@ -114,7 +115,7 @@ def thread_connectivity_check():
         curl_threads = []
         for proxy in current_query_list:
             current_thread = Thread(target=thread_table_update, args=(
-                proxy["dokodemo_port"],
+                proxy["unique_key"],
                 proxy["curl_proxy"],
                 proxy["curl_target"]
                 ))
