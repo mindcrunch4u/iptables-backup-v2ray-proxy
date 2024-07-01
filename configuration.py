@@ -17,6 +17,7 @@ default_config.verbose = True
 default_config.connectivity_check_url = "https://google.com"
 
 # dokodemo port is the key
+default_config.proxy_status_table = dict()
 default_config.proxy_status_table[12345] = 
         {
             "comment": "first proxy",
